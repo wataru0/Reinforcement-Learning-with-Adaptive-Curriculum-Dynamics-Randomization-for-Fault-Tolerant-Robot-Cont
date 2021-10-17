@@ -5,3 +5,5 @@ opencv-python
 tensorboard
 torch
 tqdm
+matplotlib
+seaborn
