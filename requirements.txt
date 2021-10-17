@@ -1,0 +1,7 @@
+gym
+mujoco-py
+numpy
+opencv-python
+tensorboard
+torch
+tqdm
