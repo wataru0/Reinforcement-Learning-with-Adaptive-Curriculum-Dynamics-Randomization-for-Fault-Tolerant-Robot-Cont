@@ -31,7 +31,7 @@ num_videos = 10
 # ================
 
 
-def train() -> None:
+def train():
     logger = LoggerList([ConsoleLogger(), TensorBoardLogger(tensorboard_dir)])
 
     # 環境を作成
@@ -55,7 +55,7 @@ def train() -> None:
     actor_critic.save_state(actor_critic_path)
 
 
-def evaluate() -> None:
+def evaluate():
     # 環境を作成
     env = GymEnv(gym.make(env_id))
 
@@ -89,7 +89,7 @@ def evaluate() -> None:
     print("----------------")
 
 
-def main() -> None:
+def main():
     os.makedirs(out_dir)
     train()
     evaluate()

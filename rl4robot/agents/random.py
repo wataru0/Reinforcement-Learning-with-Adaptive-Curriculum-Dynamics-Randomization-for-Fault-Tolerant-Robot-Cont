@@ -20,7 +20,7 @@ class RandomActionAgent(Agent):
 
     def __init__(
         self, action_range: Range[ActionArray], seed: Optional[int] = None
-    ) -> None:
+    ):
         self.action_range = action_range
         self._random_state = np.random.RandomState(seed)
 
