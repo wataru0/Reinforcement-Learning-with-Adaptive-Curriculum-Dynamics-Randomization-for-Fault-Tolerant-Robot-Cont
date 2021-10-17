@@ -5,7 +5,7 @@ from rl4robot.common.evaluating_loop import EvaluatingLoop
 from rl4robot.envs import GymEnv
 
 
-def main() -> None:
+def main():
     env_id = "Walker2d-v2"
     num_episodes = 100
 
