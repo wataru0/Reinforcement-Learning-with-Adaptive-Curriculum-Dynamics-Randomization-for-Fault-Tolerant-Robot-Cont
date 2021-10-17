@@ -40,6 +40,7 @@ evaluating_mcmc_image_dir = Path("terrain_images/evaluating")
 class CurriculumTrainingLoop(TrainingLoop):
     # _update()はPPOのモデル更新時（=horizonステップごと）に呼ばれる
     def _update(self):
+        # 型チェック，違ったらassert（エラー）を投げる
         assert isinstance(self.env, McmcTerrainEnv)
 
         super()._update()
