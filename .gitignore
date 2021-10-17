@@ -150,3 +150,5 @@ cython_debug/
 trained_agent_dir/
 monitor_log/
 MUJOCO_LOG.TXT
+test.py
+
