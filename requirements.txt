@@ -3,7 +3,7 @@ mujoco-py
 numpy
 opencv-python
 tensorboard
-torch
+torch==1.9.1
 tqdm
 matplotlib
 seaborn
