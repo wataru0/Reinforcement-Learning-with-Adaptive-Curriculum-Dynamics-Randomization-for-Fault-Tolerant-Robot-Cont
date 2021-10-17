@@ -1,3 +1,6 @@
+# 大里さんが作ったサンプルプログラム
+# 自作環境（地形カリキュラムなど）を使った訓練を実装している
+
 from pathlib import Path
 
 from rl4robot.agents import ActorCritic, PpoAgent, PpoTrainer
