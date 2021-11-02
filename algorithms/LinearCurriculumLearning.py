@@ -74,8 +74,10 @@ class LCLEnv(gym.Wrapper):
         # 各パラメータの計算
         # 1 n_levelあたりに更新するkの値
         self.k_update_size = 1.5/(n_level-1)
+        # self.k_update_size = 1.5/(n_level)
         # kの更新タイミング
         self.k_update_point = total_timestep//n_level
+        # self.k_update_point = total_timestep/n_level
 
     def reset(self, **kwargs): 
         self.reset_task()
