@@ -152,3 +152,5 @@ monitor_log/
 MUJOCO_LOG.TXT
 test.py
 out/
+output/
+fig/
