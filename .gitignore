@@ -154,3 +154,5 @@ test.py
 out/
 output/
 fig/
+sample_run.py
+mcmc_terrain_rl/
