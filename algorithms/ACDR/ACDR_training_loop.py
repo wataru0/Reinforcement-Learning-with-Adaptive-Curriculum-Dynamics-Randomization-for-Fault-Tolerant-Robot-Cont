@@ -76,15 +76,7 @@ class ACDRTrainingLoop(TrainingLoop):
     # エージェントの各グリッドでの能力を推定するメソッド
     # 各グリッドでの価値関数の値を収集
     def _estimate_capability(self):
-        env = gym.make('CustomAnt-v0')
-        est_env = ACDR.ACDREnv(env, num_grids=10)
-        # set estimating flag 
-        est_env.set_not_estimating_flag(False)
-
-        episode_done = False
-        episode_length = 0
-        # episode_return = 0.0
-
+        
         agent = PpoAgent(self.actor_critic)
         action_low, action_hight = self.env.spec.action_range
 
@@ -92,13 +84,24 @@ class ACDRTrainingLoop(TrainingLoop):
 
         # 各グリッドでcapabilityを求める
         for grid in range(self.num_grids):
-            est_env.set_grid(grid)
+            env = gym.make('CustomAnt-v0')
+            est_env = ACDR.ACDREnv(env, num_grids=10)
+            # set estimating flag 
+            est_env.set_not_estimating_flag(False)
+
+            episode_done = False
+            episode_length = 0
+            episode_return = 0.0
+
             observation = est_env.reset()
+            est_env.set_grid(grid)
+            # print(grid, est_env.joint_range)
 
             capab = 0
             # 各grid envでの評価ループ
             while True:
                 if episode_done:
+                    est_env.reset()
                     break
                 action = agent.act(observation)
                 action = np.clip(action, action_low, action_hight)
@@ -113,14 +116,17 @@ class ACDRTrainingLoop(TrainingLoop):
                 
                 # episode_done = env_step.episode_done
                 episode_length += 1
+                episode_return += reward
                 
             
             capability_of_each_grid[grid] = capab
             # print(grid, capab)
             # print(capability_of_each_grid)
+            # print(episode_length, episode_return)
         
         est_env.set_not_estimating_flag(True)
         self._update_k_sampling_grid(capability_of_each_grid)
+        print("capability: ", capability_of_each_grid)
 
 
     def _update_k_sampling_grid(self, capability_of_each_grid):
