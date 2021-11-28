@@ -11,12 +11,16 @@ from rl4robot.types import ActionArray, ObservationArray, Range, RGBArray
 
 from .env import Env, EnvSpec, EnvStep
 
+import sys
+sys.path.append('.../')
+from algorithms.ACDR.ACDR import ACDREnv
+
 __all__ = [
     "GymEnv",
 ]
 
 
-class GymEnv(Env):
+class GymEnv(Env, ACDREnv):
     """Gym環境のラッパー"""
 
     gym_env: Final[gym.wrappers.TimeLimit]
