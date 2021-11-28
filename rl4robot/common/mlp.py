@@ -45,7 +45,7 @@ class Mlp(nn.Module):
 
 _WeightInit = Callable[[nn.Linear], nn.Linear]
 
-
+# 入力故障係数分増やしたい
 def make_mlp(
     input_size: int,
     hidden_sizes: List[int],
