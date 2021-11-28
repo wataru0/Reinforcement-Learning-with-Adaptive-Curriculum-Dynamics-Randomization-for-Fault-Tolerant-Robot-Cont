@@ -101,6 +101,7 @@ class ActorCritic(nn.Module, CanSaveState, CanLoadState):
         self, observations_: BatchObservationTensor
     ) -> BatchFloatTensor:
         return self._value_mlp(observations_)
+        # ここで価値関数の値取得できる
 
     def save_state(self, path: StrPath) -> None:
         path = Path(path)
