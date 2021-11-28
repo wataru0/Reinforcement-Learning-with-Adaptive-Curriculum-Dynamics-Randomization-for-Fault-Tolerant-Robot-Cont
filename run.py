@@ -14,13 +14,17 @@ from rl4robot.envs import GymEnv
 
 import gym_custom
 # from algorithms import ACDR
+from algorithms import CDR, UDR, LinearCurriculumLearning
+from algorithms.ACDR.ACDR import ACDREnv
+from algorithms.ACDR.ACDR_training_loop import ACDRTrainingLoop
 
 def arg_parser():
     parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     parser.add_argument('--train', help='If you want to train', default=False, action='store_true')
-    parser.add_argument('--training_id', help='agent name for training', type=str, default='test')
+    parser.add_argument('--agent_id', help='agent name for training', type=str, default='test')
     parser.add_argument('--eval', help='If you want to evaluation', default=False, action='store_true')
-    parser.add_argument('--evaluating_id', help='agent name for evalation', type=str, default='test')
+    parser.add_argument('--algo', help='train algorithm', type=str, choices=['Baseline', 'UDR', 'CDR-v1', 'CDR-v2', 'LCL-v1', 'LCL-v2', 'acdr'])
+    parser.add_argument('--bound_fix', help='If you want to fix lower/upper bound in train, use', default=False, action='store_true')
     parser.add_argument('--seed', help='seed for saigensei', type=int, default=1)
     
     return parser.parse_args()
@@ -32,62 +36,28 @@ env_id = "CustomAnt-v0"
 device = "cpu"
 actor_mlp_hidden_sizes = [64, 64]
 value_mlp_hidden_sizes = [64, 64]
-training_id = args.training_id
+training_id = args.agent_id
 out_dir = Path("out") / training_id
 agent_path = "actor_critic" + "_seed={}".format(args.seed) + ".pth"
 actor_critic_path = out_dir / "trained" / agent_path
 # 訓練
-training_steps = int(2e6)  # 1M, default: int(16e6)
+training_steps = int(4e6)  # 1M, default: int(16e6)
 tb_path = "seed={}".format(args.seed)
 tensorboard_dir = out_dir / "tb" / tb_path
 horizon = 2048
 minibatch_size = 64
 num_epochs = 10
 adam_rl = 0.00022
+# LCDR用
+n_level = 11
 # 評価
 evaluating_episodes = 100
-evaluating_id = args.evaluating_id
+evaluating_id = args.agent_id
 evaluating_dir = out_dir / "eval" / evaluating_id
 video_dir = evaluating_dir / "video"
 result_json = evaluating_dir / "result.json"
 num_videos = 10
 # ================
-
-
-# # カリキュラム学習付きの訓練ループ
-# class CurriculumTrainingLoop(TrainingLoop):
-#     # _update()はPPOのモデル更新時（=horizonステップごと）に呼ばれる
-#     def _update(self):
-#         assert isinstance(self.env, McmcTerrainEnv)
-
-#         super()._update()
-
-#         # ==== MCMC地形のカリキュラム学習 ====
-#         # 注意！！
-#         # この実装はスコアに応じて適用的に j を変化させるものではなく、
-#         # 時刻に応じて j を変化させるもの
-
-#         progress = self.global_step / self.num_steps  # 訓練の進捗（0.0 〜 1.0）
-
-#         # TODO: 進捗に応じて j を決定する
-#         j = 0.5
-
-#         # j を変更
-#         # 次のエピソードからこの j が適用される
-#         self.env.set_j(j)
-
-#         # ================
-
-#     def _record_log(self):
-#         super()._record_log()
-
-#         self._record_curriculum_log()
-
-#     def _record_curriculum_log(self):
-#         if self.logger:
-#             assert isinstance(self.env, McmcTerrainEnv)
-
-#             self.logger.record("curriculum/j", self.env.j)
 
 
 def backup_run_py(is_train: bool):
@@ -153,7 +123,25 @@ def train():
     logger = LoggerList([ConsoleLogger(), TensorBoardLogger(tensorboard_dir)])
 
     # 環境を作成
-    env = GymEnv(gym.make(env_id), seed=args.seed)
+    env = gym.make(env_id)
+    if args.algo == "UDR":
+        env = UDR.UDREnv(env)
+
+    elif args.algo == "CDR-v1":
+        env = CDR.CDREnv(env, version=1, bound_fix=args.bound_fix)
+        
+    elif args.algo == "CDR-v2":
+        env = CDR.CDREnv(env, version=2, bound_fix=args.bound_fix)
+    
+    elif args.algo == "LCL-v1":
+        env = LinearCurriculumLearning.LCLEnv(env, version=1, bound_fix=args.bound_fix, total_timestep=training_steps, n_level=n_level)
+    
+    elif args.algo == "LCL-v2":
+        env = LinearCurriculumLearning.LCLEnv(env, version=2, bound_fix=args.bound_fix, total_timestep=training_steps, n_level=n_level)
+    
+    elif args.algo == 'acdr':
+        env = ACDREnv(env)
+    env = GymEnv(env, seed=args.seed)
 
     # エージェントを作成
     actor_critic = ActorCritic(
@@ -172,10 +160,18 @@ def train():
 
     # 訓練
     loop = TrainingLoop(env, trainer, training_steps, logger=logger)
+    if args.algo == 'acdr':
+        loop = ACDRTrainingLoop(env, trainer, training_steps, logger=logger, actor_critic=actor_critic)
     loop.run()
 
     # 保存
     actor_critic.save_state(actor_critic_path)
+    if args.algo == 'acdr':
+        loop.save_grid_log(out_dir, seed=args.seed)
+
+    if "CDR" in args.algo:
+        CDR.CDREnv.visualize_fig(env, save_path=str(args.agent_id) + '-seed' + str(args.seed))
+        CDR.CDREnv.output_csv(env, save_path=str(args.agent_id), seed=str(args.seed))
 
 
 def evaluate():
@@ -183,7 +179,7 @@ def evaluate():
     args = arg_parser()
 
     # 環境を作成
-    env = GymEnv(gym.make(env_id),seed=args.seed)
+    env = GymEnv(gym.make(env_id), seed=args.seed)
 
     # エージェントを作成
     actor_critic = ActorCritic(
