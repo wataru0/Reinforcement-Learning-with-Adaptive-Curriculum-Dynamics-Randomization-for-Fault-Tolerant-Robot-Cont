@@ -48,6 +48,7 @@ class ACDRTrainingLoop(TrainingLoop):
     # _update()はPPOのモデル更新時に呼ばれる
     def _update(self):
         super()._update()
+        # 各グリッドでの性能を推定する
         self._estimate_capability()
 
         progress = self.global_step / self.num_steps
@@ -58,7 +59,10 @@ class ACDRTrainingLoop(TrainingLoop):
             print(self.grid_log)
 
     def save_grid_log(self, path, seed=1):
-        """k_sampling_gridをjson形式で保存"""
+        """
+        k_sampling_gridをjson形式で保存
+        """
+        
         print(self.grid_log)
         filename = 'k_sampling_grid_seed-' + str(seed) + '.json'
         with open(path / filename, 'w') as f:
@@ -129,6 +133,7 @@ class ACDRTrainingLoop(TrainingLoop):
         print("capability: ", capability_of_each_grid)
 
 
+    # 学習初期の+1と学習終盤の+1は分母が大きくなっているため重みが違う
     def _update_k_sampling_grid(self, capability_of_each_grid):
         # 最もcapabilityが低いグリッドの発生確率を上げる
         worst_grid = np.argmin(capability_of_each_grid)
