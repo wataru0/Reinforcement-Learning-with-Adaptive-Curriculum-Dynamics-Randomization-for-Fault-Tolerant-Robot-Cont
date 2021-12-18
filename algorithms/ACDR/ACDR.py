@@ -20,15 +20,6 @@ import sys
 sys.path.append('.../')
 from seaborn import widgets
 
-# from rl4robot.envs.gym_env import GymEnv
-# from rl4robot.agents import ActorCritic, PpoAgent, PpoTrainer
-# from rl4robot.common.evaluating_loop import EvaluatingLoop
-# from rl4robot.common.loggers import (
-#     ConsoleLogger,
-#     LoggerList,
-#     TensorBoardLogger,
-# )
-# from rl4robot.common.training_loop import TrainingLoop
 from rl4robot.envs import EnvWrapper, EnvSpec, EnvStep
 
 sns.set()
@@ -150,16 +141,19 @@ class ACDREnv(gym.Wrapper):
     def _select_sampling_range(self):
         # self.k_range_sampling_gridには重みが格納されている：[1,2,3,4,5]や[10,10,10,90]のように，
         # その重みに応じてサンプリングを行う範囲を決定する
-        weight_sum = sum(self.k_sampling_grid)
-        r = random.random() * weight_sum
+        # weight_sum = sum(self.k_sampling_grid)
+        # r = random.random() * weight_sum
         
-        # サンプリングするindexを取得
-        num = 0
-        for i, weight in enumerate(self.k_sampling_grid):
-            num += weight
-            if r <= num:
-                sampling_index = i
-                break
+        # # サンプリングするindexを取得
+        # num = 0
+        # for i, weight in enumerate(self.k_sampling_grid):
+        #     num += weight
+        #     if r <= num:
+        #         sampling_index = i
+        #         break
+
+        sampling_index_list = [i for i in range(self.num_grids)]
+        sampling_index = random.choices(sampling_index_list, weights=self.k_sampling_grid)[0]
         
         # indexからサンプリングするk_rangeを求める
         range_step = (self.k_hight - self.k_low)/self.num_grids
@@ -199,21 +193,6 @@ class ACDREnv(gym.Wrapper):
         elif self.crippled_leg == 4:
             pass
 
-        # make th removed leg look red
-        # geom_rgba = self._init_geom_rgba.copy()
-        # if self.crippled_leg == 0:
-        #     geom_rgba[3, :3] = np.array([1, 0, 0])
-        #     geom_rgba[4, :3] = np.array([1, 0, 0])
-        # elif self.crippled_leg == 1:
-        #     geom_rgba[6, :3] = np.array([1, 0, 0])
-        #     geom_rgba[7, :3] = np.array([1, 0, 0])
-        # elif self.crippled_leg == 2:
-        #     geom_rgba[9, :3] = np.array([1, 0, 0])
-        #     geom_rgba[10, :3] = np.array([1, 0, 0])
-        # elif self.crippled_leg == 3:
-        #     geom_rgba[12, :3] = np.array([1, 0, 0])
-        #     geom_rgba[13, :3] = np.array([1, 0, 0])
-        # self.model.geom_rgba[:] = geom_rgba 
 
     def visualize_fig(self, save_path):
         # figure
