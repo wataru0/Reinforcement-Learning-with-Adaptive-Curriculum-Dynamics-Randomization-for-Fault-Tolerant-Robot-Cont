@@ -14,13 +14,14 @@ from .env import Env, EnvSpec, EnvStep
 import sys
 sys.path.append('.../')
 from algorithms.ACDR.ACDR import ACDREnv
+from algorithms.ACDR.ACDRB import ACDRBEnv
 
 __all__ = [
     "GymEnv",
 ]
 
 
-class GymEnv(Env, ACDREnv):
+class GymEnv(Env, ACDREnv, ACDRBEnv):
     """Gym環境のラッパー"""
 
     gym_env: Final[gym.wrappers.TimeLimit]
