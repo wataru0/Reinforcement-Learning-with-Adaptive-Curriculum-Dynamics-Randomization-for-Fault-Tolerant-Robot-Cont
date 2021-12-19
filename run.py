@@ -43,7 +43,7 @@ out_dir = Path("out") / training_id
 agent_path = "actor_critic" + "_seed={}".format(args.seed) + ".pth"
 actor_critic_path = out_dir / "trained" / agent_path
 # 訓練
-training_steps = int(4e6)  # 1M, default: int(16e6)
+training_steps = int(2e6)  # 1M, default: int(16e6)
 tb_path = "seed={}".format(args.seed)
 tensorboard_dir = out_dir / "tb" / tb_path
 horizon = 2048

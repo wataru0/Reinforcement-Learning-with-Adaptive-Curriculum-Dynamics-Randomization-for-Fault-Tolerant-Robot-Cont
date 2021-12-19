@@ -50,14 +50,17 @@
 # python run.py --train --agent_id=acdr_prot --seed=4 --algo=acdr
 # python run.py --train --agent_id=acdr_prot --seed=5 --algo=acdr
 
-python run.py --train --agent_id=acdr_prot_softmax_t=1 --seed=1 --algo=acdr
-python run.py --train --agent_id=acdr_prot_softmax_t=1 --seed=2 --algo=acdr
-python run.py --train --agent_id=acdr_prot_softmax_t=1 --seed=3 --algo=acdr
-python run.py --train --agent_id=acdr_prot_softmax_t=1 --seed=4 --algo=acdr
-python run.py --train --agent_id=acdr_prot_softmax_t=1 --seed=5 --algo=acdr
+# python run.py --train --agent_id=acdr_prot_softmax_t=1 --seed=1 --algo=acdr
+# python run.py --train --agent_id=acdr_prot_softmax_t=1 --seed=2 --algo=acdr
+# python run.py --train --agent_id=acdr_prot_softmax_t=1 --seed=3 --algo=acdr
+# python run.py --train --agent_id=acdr_prot_softmax_t=1 --seed=4 --algo=acdr
+# # python run.py --train --agent_id=acdr_prot_softmax_t=1 --seed=5 --algo=acdr
 
-# python run.py --train --agent_id=acdr_prot_bayes --seed=1 --algo=acdrb
-# python run.py --train --agent_id=acdr_prot_bayes --seed=2 --algo=acdrb
-# python run.py --train --agent_id=acdr_prot_bayes --seed=3 --algo=acdrb
-# python run.py --train --agent_id=acdr_prot_bayes --seed=4 --algo=acdrb
-# python run.py --train --agent_id=acdr_prot_bayes --seed=5 --algo=acdrb
+python run.py --train --agent_id=acdr_prot_bayes --seed=1 --algo=acdrb
+python run.py --train --agent_id=acdr_prot_bayes --seed=2 --algo=acdrb
+python run.py --train --agent_id=acdr_prot_bayes --seed=3 --algo=acdrb
+python run.py --train --agent_id=acdr_prot_bayes --seed=4 --algo=acdrb
+python run.py --train --agent_id=acdr_prot_bayes --seed=5 --algo=acdrb
+
+# acdr_softmax seed 5, acdrb seed ?????
+# acdr_softmaxはminmax normやってないやつもやる
