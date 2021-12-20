@@ -10,9 +10,7 @@ import sys
 import json
 import math
 
-from algorithms.ACDR import ACDR
 sys.path.append('.../')
-
 from rl4robot.agents.ppo import actor_critic, trainer
 from rl4robot.agents import Trainer, ActorCritic, PpoAgent
 from rl4robot.envs import Env
@@ -21,6 +19,7 @@ from rl4robot.common.training_loop import TrainingLoop
 from rl4robot.common.evaluating_loop import EvaluatingLoop
 from rl4robot.common.loggers import Logger
 
+from algorithms.ACDR import ACDR
 import gym_custom
 
 __all__ = [
@@ -62,7 +61,7 @@ class ACDRTrainingLoop(TrainingLoop):
         """
         k_sampling_gridをjson形式で保存
         """
-        
+
         print(self.grid_log)
         filename = 'k_sampling_grid_seed-' + str(seed) + '.json'
         with open(path / filename, 'w') as f:
@@ -128,14 +127,28 @@ class ACDRTrainingLoop(TrainingLoop):
             # print(capability_of_each_grid)
             # print(episode_length, episode_return)
         
+        print("capability: ", capability_of_each_grid)
         est_env.set_not_estimating_flag(True)
         self._update_k_sampling_grid(capability_of_each_grid)
-        print("capability: ", capability_of_each_grid)
-
 
     # 学習初期の+1と学習終盤の+1は分母が大きくなっているため重みが違う
+    # 12/15：累積和ではなくsoftmax関数を用いる
     def _update_k_sampling_grid(self, capability_of_each_grid):
-        # 最もcapabilityが低いグリッドの発生確率を上げる
-        worst_grid = np.argmin(capability_of_each_grid)
-        self.k_sampling_grid[worst_grid] += 1
+        # ===累積和による更新===
+        # # 最もcapabilityが低いグリッドの発生確率を上げる
+        # worst_grid = np.argmin(capability_of_each_grid)
+        # self.k_sampling_grid[worst_grid] += 1
+
+        def min_max_norm(x, axis=None):
+            min = x.min(axis=axis, keepdims=True)
+            max = x.max(axis=axis, keepdims=True)
+            return (x - min)/(max - min)
+
+        # ===ソフトマックス関数による更新===
+        # capabilityのminmax正規化
+        capability_of_each_grid = min_max_norm(capability_of_each_grid)
+        print("capability_norm: ", capability_of_each_grid)
+        # self.k_sampling_grid = torch.nn.functional.softmax(torch.tensor(capability_of_each_grid)/5).tolist()
+        self.k_sampling_grid = torch.nn.functional.softmax(torch.tensor(capability_of_each_grid)).tolist()
+
         self.env.set_k_sampling_grid(self.k_sampling_grid)
