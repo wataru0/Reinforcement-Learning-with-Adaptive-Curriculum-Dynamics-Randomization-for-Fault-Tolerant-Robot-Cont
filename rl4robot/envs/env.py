@@ -35,6 +35,7 @@ class EnvStep:
     observation: ObservationArray  # 観測値
     reward: float  # 報酬
     episode_done: bool  # エピソードが終了したか
+    info: dict # infomation
 
 
 class Env(Protocol):

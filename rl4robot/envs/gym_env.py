@@ -84,10 +84,10 @@ class GymEnv(Env, ACDREnv, ACDRBEnv):
         return self.gym_env.reset()
 
     def step(self, action: ActionArray) -> EnvStep:
-        observation, reward, episode_done, _ = self.gym_env.step(action)
+        observation, reward, episode_done, info = self.gym_env.step(action)
 
         return EnvStep(
-            observation=observation, reward=reward, episode_done=episode_done
+            observation=observation, reward=reward, episode_done=episode_done, info=info
         )
 
     def render_image(

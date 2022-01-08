@@ -16,6 +16,7 @@ from rl4robot.types import StrPath
 class EvaluatingResult:
     episode_lengths: List[int]
     episode_returns: List[float]
+    episode_forward_rewards: List[float]
 
     def episode_length_mean(self) -> float:
         return stats.mean(self.episode_lengths)
@@ -28,6 +29,12 @@ class EvaluatingResult:
 
     def episode_return_std(self) -> float:
         return stats.stdev(self.episode_returns)
+    
+    def episode_forward_reward_mean(self) -> float:
+        return stats.mean(self.episode_forward_rewards)
+
+    def episode_forward_reward_std(self) -> float:
+        return stats.stdev(self.episode_forward_rewards)
 
 
 class EvaluatingLoop:
@@ -56,6 +63,7 @@ class EvaluatingLoop:
 
         episode_lengths: List[int] = []
         episode_returns: List[float] = []
+        episode_forward_rewards: List[float] = []
 
         for i in tqdm.tqdm(range(self.num_episodes)):
             video_path = (
@@ -64,13 +72,14 @@ class EvaluatingLoop:
                 else None
             )
 
-            episode_length, episode_return = self._collect_episode(video_path)
+            episode_length, episode_return, episode_forward_reward = self._collect_episode(video_path)
 
             episode_lengths.append(episode_length)
             episode_returns.append(episode_return)
+            episode_forward_rewards.append(episode_forward_reward)
 
         return EvaluatingResult(
-            episode_lengths=episode_lengths, episode_returns=episode_returns
+            episode_lengths=episode_lengths, episode_returns=episode_returns, episode_forward_rewards=episode_forward_rewards
         )
 
     def _collect_episode(
@@ -90,6 +99,7 @@ class EvaluatingLoop:
         episode_done = False
         episode_length = 0
         episode_return = 0.0
+        episode_forward_reward = 0.0
 
         observation = self.env.reset()
 
@@ -107,8 +117,9 @@ class EvaluatingLoop:
             episode_done = env_step.episode_done
             episode_length += 1
             episode_return += env_step.reward
+            episode_forward_reward += env_step.info['reward_forward']
 
         if video_writer:
             video_writer.close()
 
-        return episode_length, episode_return
+        return episode_length, episode_return, episode_forward_reward
