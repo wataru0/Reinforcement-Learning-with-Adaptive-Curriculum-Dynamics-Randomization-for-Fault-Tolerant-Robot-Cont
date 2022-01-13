@@ -157,6 +157,7 @@ def evaluate():
     backup_run_py(is_train=False)
     args = arg_parser()
 
+    print(evaluating_id)
     for seed in range(1, 6):
         # === plain env ===
         env = GymEnv(gym.make(env_id), seed=seed+100)
