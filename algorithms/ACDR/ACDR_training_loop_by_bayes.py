@@ -34,7 +34,7 @@ evaluating_episodes = 10
 
 # # 真ACDRプロトタイプ　訓練ループ
 class ACDRTrainingLoopByBayes(TrainingLoop):
-    def __init__(self, env: Env, trainer: Trainer, num_steps: int, actor_critic: ActorCritic, logger: Optional[Logger] = None) -> None:
+    def __init__(self, env: Env, trainer: Trainer, num_steps: int, actor_critic: ActorCritic, maximize_flag = True, logger: Optional[Logger] = None) -> None:
         super().__init__(env, trainer, num_steps, logger=logger)
 
         # --インスタンス変数--
@@ -44,6 +44,9 @@ class ACDRTrainingLoopByBayes(TrainingLoop):
 
         # 学習中にベイズ最適化により選択されたkを記録するdict
         self.k_log = {}
+
+        # ベイズ最適化で最大化を行うか，最小化を行うかのフラグ
+        self.maximize_flag = maximize_flag
 
     # _update()はPPOのモデル更新時に呼ばれる
     def _update(self):
@@ -113,7 +116,7 @@ class ACDRTrainingLoopByBayes(TrainingLoop):
 
         # Run bayse optimization
         # maximize: Trueの時最大化，Falseの時最小化
-        my_opt = GPyOpt.methods.BayesianOptimization(f=run_estimate_capability, domain=bounds, maximize=True)
+        my_opt = GPyOpt.methods.BayesianOptimization(f=run_estimate_capability, domain=bounds, maximize=self.maximize_flag)
         my_opt.run_optimization(max_iter=10)
 
         # ベイズ最適化により求まったkの値（self.k_opt）
