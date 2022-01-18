@@ -112,7 +112,8 @@ class ACDRTrainingLoopByBayes(TrainingLoop):
                     'domain': (0.0, 1.5)}]
 
         # Run bayse optimization
-        my_opt = GPyOpt.methods.BayesianOptimization(f=run_estimate_capability, domain=bounds)
+        # maximize: Trueの時最大化，Falseの時最小化
+        my_opt = GPyOpt.methods.BayesianOptimization(f=run_estimate_capability, domain=bounds, maximize=True)
         my_opt.run_optimization(max_iter=10)
 
         # ベイズ最適化により求まったkの値（self.k_opt）
