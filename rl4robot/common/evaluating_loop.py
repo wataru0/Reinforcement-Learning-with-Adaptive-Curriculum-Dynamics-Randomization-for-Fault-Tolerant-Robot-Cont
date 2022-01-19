@@ -43,6 +43,7 @@ class EvaluatingLoop:
     num_episodes: Final[int]
     video_dir: Final[Optional[Path]]
     num_videos: Final[int]
+    gene_flag: Final[bool]
 
     def __init__(
         self,
@@ -51,12 +52,14 @@ class EvaluatingLoop:
         num_episodes: int,
         video_dir: Optional[StrPath] = None,
         num_videos: int = 0,
+        gene_flag: bool = False,
     ) -> None:
         self.env = env
         self.agent = agent
         self.num_episodes = num_episodes
         self.video_dir = Path(video_dir) if video_dir else None
         self.num_videos = num_videos
+        self.gene_flag = gene_flag
 
     def run(self) -> EvaluatingResult:
         """評価ループを実行する。"""
@@ -65,8 +68,9 @@ class EvaluatingLoop:
         episode_returns: List[float] = []
         episode_forward_rewards: List[float] = []
 
-        for i in tqdm.tqdm(range(self.num_episodes)):
-            video_path = (
+        if self.gene_flag:
+            for i in range(self.num_episodes):
+                video_path = (
                 self.video_dir / f"episode-{i + 1:03}.mp4"
                 if i < self.num_videos
                 else None
@@ -78,9 +82,26 @@ class EvaluatingLoop:
             episode_returns.append(episode_return)
             episode_forward_rewards.append(episode_forward_reward)
 
-        return EvaluatingResult(
-            episode_lengths=episode_lengths, episode_returns=episode_returns, episode_forward_rewards=episode_forward_rewards
-        )
+            return EvaluatingResult(
+                episode_lengths=episode_lengths, episode_returns=episode_returns, episode_forward_rewards=episode_forward_rewards
+            )
+        else:
+            for i in tqdm.tqdm(range(self.num_episodes)):
+                video_path = (
+                    self.video_dir / f"episode-{i + 1:03}.mp4"
+                    if i < self.num_videos
+                    else None
+                )
+
+                episode_length, episode_return, episode_forward_reward = self._collect_episode(video_path)
+
+                episode_lengths.append(episode_length)
+                episode_returns.append(episode_return)
+                episode_forward_rewards.append(episode_forward_reward)
+
+            return EvaluatingResult(
+                episode_lengths=episode_lengths, episode_returns=episode_returns, episode_forward_rewards=episode_forward_rewards
+            )
 
     def _collect_episode(
         self, video_path: Optional[StrPath] = None
