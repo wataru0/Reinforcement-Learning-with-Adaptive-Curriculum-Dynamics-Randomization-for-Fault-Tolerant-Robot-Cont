@@ -156,3 +156,4 @@ output/
 fig/
 sample_run.py
 mcmc_terrain_rl/
+test_GPyOpt.py
