@@ -14,7 +14,7 @@ from rl4robot.envs import GymEnv
 
 import gym_custom
 # from algorithms import ACDR
-from algorithms import CDR, UDR, LinearCurriculumLearning
+from algorithms import CDR, UDR, LinearCurriculumLearning, Baseline
 from algorithms.ACDR.ACDR import ACDREnv
 from algorithms.ACDR.ACDR_training_loop import ACDRTrainingLoop
 from algorithms.ACDR.ACDRB import ACDRBEnv
@@ -28,7 +28,8 @@ def arg_parser():
     parser.add_argument('--algo', help='train algorithm', type=str, choices=['Baseline', 'UDR', 'CDR-v1', 'CDR-v2', 'LCL-v1', 'LCL-v2', 'acdr', 'acdrb'])
     parser.add_argument('--bound_fix', help='If you want to fix lower/upper bound in train, use', default=False, action='store_true')
     parser.add_argument('--seed', help='seed for saigensei', type=int, default=1)
-    
+    parser.add_argument('--baseline_k', help='If you want to fix k of baseline method, set!', type=float, default=1.0)
+
     return parser.parse_args()
 
 args = arg_parser()
@@ -43,13 +44,14 @@ out_dir = Path("out") / training_id
 agent_path = "actor_critic" + "_seed={}".format(args.seed) + ".pth"
 actor_critic_path = out_dir / "trained" / agent_path
 # 訓練
-training_steps = int(2e6)  # 1M, default: int(16e6)
+training_steps = int(4e6)  # 1M, default: int(16e6)
 tb_path = "seed={}".format(args.seed)
 tensorboard_dir = out_dir / "tb" / tb_path
 horizon = 2048
 minibatch_size = 64
 num_epochs = 10
 adam_rl = 0.00022
+maximaize_flag = True # ACDRBの時，ベイズ最適化で最大値を見つける場合のフラグ．Falseにすると最小値探索を行う．
 # LCDR用
 n_level = 11
 # 評価
@@ -146,6 +148,9 @@ def train():
     
     elif args.algo == 'acdrb':
         env = ACDRBEnv(env)
+    
+    elif args.algo == 'Baseline':
+        env = Baseline.BaselineEnv(env, k=args.baseline_k)
 
     env = GymEnv(env, seed=args.seed)
 
@@ -169,7 +174,7 @@ def train():
     if args.algo == 'acdr':
         loop = ACDRTrainingLoop(env, trainer, training_steps, logger=logger, actor_critic=actor_critic)
     elif args.algo == 'acdrb':
-        loop = ACDRTrainingLoopByBayes(env, trainer, training_steps, logger=logger, actor_critic=actor_critic)
+        loop = ACDRTrainingLoopByBayes(env, trainer, training_steps, logger=logger, actor_critic=actor_critic, maximize_flag=maximaize_flag)
     loop.run()
 
     # 保存

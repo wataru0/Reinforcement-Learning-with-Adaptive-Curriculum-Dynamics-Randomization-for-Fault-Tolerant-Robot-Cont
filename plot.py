@@ -15,11 +15,21 @@ def arg_parser():
 
 dir = "./out/" 
 path = "eval/"
-# agents = ["baseline-v2/", "udr/", "lcdr-v1/", "lcdr-v2/"]
-# agents = ['baseline-v2/','acdr_prot_softmax_t=1/']
-# agents = ['acdr_prot_bayes/']
-agents = ["baseline_4e6/", "udr/", "lcdr-v1/", "lcdr-v2/", "cdr-v1_/", "cdr-v2_/", "acdr_prot_bayes_4e6/"]
-labels = np.array(['Baseline', 'UDR', 'LCDR-e2h', 'LCDR-h2e', 'ACDR-e2h', 'ACDR-h2e', 'Bayes'])
+
+# 修論用
+# agents = ["baseline_4e6/", "udr/", "lcdr-v1/", "lcdr-v2_4e6/", "cdr-v1_bf10/", "cdr-v2_bf10/", "acdr_prot_bayes_4e6/"]
+# labels = np.array(['Baseline', 'UDR', 'LCDR-e2h', 'LCDR-h2e', 'ACDR-e2h', 'ACDR-h2e', 'ACDRB'])
+
+# 発表用
+# agents = ["baseline_4e6/", "udr/", "lcdr-v1/", "lcdr-v2_4e6/", "acdr_prot_bayes_4e6/"]
+# labels = np.array(['Baseline', 'UDR', 'LCDR-e2h', 'LCDR-h2e', 'ACDRB'])
+agents = ["baseline_4e6/", "udr/", "lcdr-v2_4e6/", "acdr_prot_bayes_4e6/"]
+labels = np.array(['Baseline', 'UDR', 'LCDR', 'ACDRB'])
+
+# 確認用
+# agents = ["baseline_4e6/", "udr/", "lcdr-v1/", "lcdr-v2_4e6/", "cdr-v1_bf50_8e6/", "cdr-v2_bf50_8e6/", "acdr_prot_bayes_4e6/"]
+# agents = ["baseline_4e6/", "udr/", "lcdr-v1/", "lcdr-v2_4e6/", "cdr-v1_bf10/", "cdr-v2_bf10/", "acdr_prot_bayes_4e6/", "acdrb_4e6_maximizeFlag=True/"]
+# labels = np.array(['Baseline', 'UDR', 'LCDR-e2h', 'LCDR-h2e', 'ACDR-e2h', 'ACDR-h2e', 'ACDRB'])
 
 figdir = './fig/'
 os.makedirs(figdir, exist_ok=True)
@@ -46,8 +56,8 @@ for agent in agents:
     broken_progress_error = []
     # default: range(1, 6)
     for seed in range(1, 6):
-        # if agent == "cdr-v2_16e6/" and seed == 5:
-        #     break
+        if agent == "lcdr-v2_4e6/" and (seed == 3 or seed == 4):
+            continue
         # 各seedのplain rewardを取得
         json_open = open(dir + agent + path + "plain_result_seed={}.json".format(seed), 'r')
         json_load = json.load(json_open)
@@ -104,11 +114,12 @@ if args.type == 0:
     ax1.bar(x-width/2, plain_r, width=width, color='dodgerblue', align='center', label='plain', yerr=plain_re, capsize=5)
     ax1.bar(x+width/2, broken_r, width=width, color='mediumseagreen', align='center', label='broken', yerr=broken_re, capsize=5)
 
-    ax1.set_ylabel("Average Reward")
-    plt.tick_params(labelsize=10)
+    ax1.set_ylabel("Average Reward", fontsize=15)
+    plt.tick_params(axis='x', labelsize=15)
     ax1.set_xticks(x)
     ax1.set_xticklabels(labels)
     ax1.legend(loc='upper left')
+    ax1.set_ylim(-200, 3500)
 
     now = dt.datetime.now()
     time = now.strftime('%Y%m%d-%H%M%S')
@@ -126,11 +137,12 @@ if args.type == 0:
     ax2.bar(x-width/2, plain_p, width=width, color='blue', align='center', label='plain', yerr=plain_pe, capsize=5)
     ax2.bar(x+width/2, broken_pe, width=width, color='green', align='center', label='broken', yerr=broken_pe, capsize=5)
 
-    ax2.set_ylabel("Average Progress")
-    plt.tick_params(labelsize=10)
+    ax2.set_ylabel("Average Progress", fontsize=15)
+    plt.tick_params(labelsize=15)
     ax2.set_xticks(x)
     ax2.set_xticklabels(labels)
     ax2.legend(loc='upper left')
+    ax2.set_ylim(-200, 3500)
 
     now = dt.datetime.now()
     time = now.strftime('%Y%m%d-%H%M%S')
@@ -157,6 +169,7 @@ elif args.type == 1:
     ax1.set_xticks(x)
     ax1.set_xticklabels(labels)
     ax1.legend(loc='upper left')
+    ax1.set_ylim(-200, 3500)
 
     ax2.bar(x-width/2, plain_p, width=width, color='blue', align='center', label='plain', yerr=plain_pe, capsize=3)
     ax2.bar(x+width/2, broken_pe, width=width, color='green', align='center', label='broken', yerr=broken_pe, capsize=3)
@@ -166,6 +179,7 @@ elif args.type == 1:
     ax2.set_xticks(x)
     ax2.set_xticklabels(labels)
     ax2.legend(loc='upper left')
+    ax2.set_ylim(-200, 3500)
 
     plt.tight_layout() # 追加
     plt.savefig(figdir + 'zemi.png')
