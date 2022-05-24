@@ -1,4 +1,4 @@
-# Linear Curriculum Learning Algorithm
+# Linear Curriculum Dynamics Randomization (LCDR) Algorithm
 
 import os
 import gym

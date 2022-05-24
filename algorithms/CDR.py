@@ -1,4 +1,4 @@
-# Adaptive Curriculum Dynamics Randomization Algorithm
+# Adaptive Curriculum Dynamics Randomization (ACDR) Algorithm
 
 import os
 import gym
