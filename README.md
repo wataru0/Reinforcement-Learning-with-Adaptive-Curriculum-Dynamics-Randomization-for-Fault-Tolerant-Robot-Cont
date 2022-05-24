@@ -12,5 +12,9 @@ pip install -r requirements.txt
 
 # Run
 ```
-python run.py --train --agent_id=baseline --seed=1 --algo=Baseline
+# How to run ACDR_easy2hard algorithm
+python run.py --train --agent_id=baseline --seed=1 --algo=CDR-v1
+
+# How to run ACDR_hard2easy algorithm
+python run.py --train --agent_id=baseline --seed=1 --algo=CDR-v2
 ```
