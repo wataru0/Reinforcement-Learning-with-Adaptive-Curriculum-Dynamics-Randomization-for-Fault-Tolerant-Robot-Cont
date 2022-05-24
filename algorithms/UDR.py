@@ -1,11 +1,4 @@
 # Uniform Domain Randomization Algorithm
-# 2021/04/27
-# パラメータ範囲を一様にサンプリングする従来のドメインランダマイゼーション手法 
-# 今まで一つのファイルでトレーニングを回していたのをクラスごとにしっかり分けようというもの
-# train.pyを実行する際に，gym環境をラッパーすることで実装する
-
-# トルクのランダム化範囲について先行研究
-# https://arxiv.org/pdf/2010.04304.pdf
 
 import gym
 import numpy as np
@@ -32,13 +25,11 @@ class UDREnv(gym.Wrapper):
 
     def step(self,action):
         if self.cripple_mask is not None:
-            joint_mask = [i for i,x in enumerate(self.cripple_mask) if x == 99] # 99が入っているインデックスを取得
-            #print(joint_mask) # [4,5]のように表示される
+            joint_mask = [i for i,x in enumerate(self.cripple_mask) if x == 99]
             if joint_mask != []:
                 action[joint_mask[0]]=henkan(action[joint_mask[0]],-1,1, -self.joint_range, self.joint_range)
                 action[joint_mask[1]]=henkan(action[joint_mask[1]],-1,1, -self.joint_range, self.joint_range)
             #ーーーー action = self.cripple_mask * action
-            #print(action) # joint_maskの要素のaction値をクリップ(指定した値の間の値に変換)することができた
 
         obs, reward, done, info = self.env.step(action)
 
@@ -48,14 +39,10 @@ class UDREnv(gym.Wrapper):
 
     def reset_task(self,value=None):
         # randomly cripple leg (4 is nothing)
-        self.crippled_leg = value if value is not None else np.random.randint(0,5) # (0,4)だと0から4個なので0,1,2,3までしかでない！！
+        self.crippled_leg = value if value is not None else np.random.randint(0,5)
         
-        # joint_min_range~joint_max_rangeまでの乱数を生成。これがaction値のrangeになる
-        # ランダム化範囲を[0.0, 1.0] -> [0.0, 1.5]に変更
         self.joint_range = random.uniform(0.0, 1.5)
 
-        # Pick which actuators to disable
-        # joint rangeを変更する足をマスクで表現、99を代入しておく
         self.cripple_mask = np.ones(self.action_space.shape)
         if self.crippled_leg == 0:
             self.cripple_mask[2] = 99
@@ -72,7 +59,6 @@ class UDREnv(gym.Wrapper):
         elif self.crippled_leg == 4:
             pass
 
-        # make th removed leg look red
         geom_rgba = self._init_geom_rgba.copy()
         if self.crippled_leg == 0:
             geom_rgba[3, :3] = np.array([1, 0, 0])

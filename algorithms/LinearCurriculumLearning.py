@@ -1,14 +1,4 @@
 # Linear Curriculum Learning Algorithm
-# 2021/06/17
-# 提案手法
-# 今まで一つのファイルでトレーニングを回していたのをクラスごとにしっかり分けようというもの
-# train.pyを実行する際に，gym環境をラッパーすることで実装する
-# ver 1 は高いトルク制限値kから始めるもの
-# ver 2 は低いトルク制限値kから始めるもの
-
-# トルクのランダム化範囲について先行研究
-# https://arxiv.org/pdf/2010.04304.pdf
-# k は [0.0, 1.5]でやる
 
 import os
 import gym
@@ -20,11 +10,12 @@ import pandas as pd
 import datetime
 
 #可視化用
-joint_actuator_range_max = [] # kの上限値を格納するリスト
-joint_actuator_range_min = [] # kの下限値を格納するリスト
-actuator_map = np.zeros((10,8)) # 適用された故障率の分布を調べるためのマップ
+joint_actuator_range_max = []
+joint_actuator_range_min = []
+actuator_map = np.zeros((10,8))
 actuator_bunpu= [0]*10
-actuator_power_map = np.zeros((10,8)) # 実際のactuator出力の分布を調べるためのマップ
+# 実際のactuator出力の分布を調べるためのマップ
+actuator_power_map = np.zeros((10,8))
 rewardlist = []
 
 # 平均報酬
@@ -38,7 +29,6 @@ def henkan(val, start1, stop1, start2, stop2):
 class LCLEnv(gym.Wrapper):
     def __init__(self, env, value=None, version=2, bound_fix=False, total_timestep=int(16e6), n_level=10):
         super().__init__(env)
-        # 以下インスタンス変数
         self.value = value 
         self.version = version
         self.crippled_leg = 0
@@ -88,17 +78,10 @@ class LCLEnv(gym.Wrapper):
 
     def step(self, action):
         if self.cripple_mask is not None:
-            joint_mask = [i for i,x in enumerate(self.cripple_mask) if x == 99] # 99が入っているインデックスを取得
-            # print(joint_mask) # [4,5]のように表示される
+            joint_mask = [i for i,x in enumerate(self.cripple_mask) if x == 99]
             
             # ver1:ランダムに選ばれた足一本の2個ある関節のうちどちらかのactuatorを変更する処理
             if joint_mask != []:
-                # グラフ作成用
-                # 各関節の故障率の分布を見る，actuator_mapで      
-                # index = int(self.joint_range*10)
-                # if index == 10:
-                #     index = 9
-                
                 # self.joint_num：0（第一関節故障），1（第二関節故障），2（二つの関節両方故障）
                 #self.joint_num = np.random.randint(0,3) # これからやろうとしている
                 self.joint_num = 2 # 前のやり方
@@ -111,13 +94,6 @@ class LCLEnv(gym.Wrapper):
                 else:
                     action[joint_mask[0]]=henkan(action[joint_mask[0]], -1, 1, -self.joint_range, self.joint_range)
                     action[joint_mask[1]]=henkan(action[joint_mask[1]], -1, 1, -self.joint_range, self.joint_range)
-                    # actuator_map[index][joint_mask[0]] += 1
-                    # actuator_map[index][joint_mask[1]] += 1
-            #ーーーー action = self.cripple_mask * action
-            #print(action) # joint_maskの要素のaction値をクリップ(指定した値の間の値に変換)することができた
-
-        # ver2:エージェントにある関節8個全てのactuatorをランダムに変更する処理
-        # action = action * self.actuator_list #np.arrayはこの計算できる，各要素同士の積になる
 
         obs,reward,done,info = self.env.step(action)
         self.num_step += 1
@@ -164,14 +140,6 @@ class LCLEnv(gym.Wrapper):
         # joint_min~joint_maxまでの乱数を生成。これがaction値のrangeになる
         self.joint_range = random.uniform(self.joint_min, self.joint_max)
 
-        # もう少し考える必要ある---6/28
-        # 各関節で変化させる
-        # for i in range(len(self.actuator_list)):
-        #     #self.joint_range = random.uniform(0,self.joint_max) #確認用
-        #     self.joint_range = random.uniform(self.joint_min,self.joint_max)
-        #     self.actuator_list[i] = self.joint_range # 各関節リストにactuatorの値を格納
-        #---------------------------
-        
         # Pick which actuators to disable
         # joint rangeを変更する足をマスクで表現、99を代入しておく
         self.cripple_mask = np.ones(self.action_space.shape)

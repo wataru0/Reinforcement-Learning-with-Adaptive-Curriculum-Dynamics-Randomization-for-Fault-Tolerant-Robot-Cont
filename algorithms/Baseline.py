@@ -1,9 +1,4 @@
 # Baseline RL Algorithm
-# 2021/07/09
-# 今まで一つのファイルでトレーニングを回していたのをクラスごとにしっかり分けようというもの
-# kの値をtrain開始時に指定できるように改良
-# train.pyを実行する際に，gym環境をラッパーすることで実装する
-
 
 import gym
 import numpy as np
@@ -30,8 +25,7 @@ class BaselineEnv(gym.Wrapper):
 
     def step(self,action):
         if self.cripple_mask is not None:
-            joint_mask = [i for i,x in enumerate(self.cripple_mask) if x == 99] # 99が入っているインデックスを取得
-            #print(joint_mask) # [4,5]のように表示される
+            joint_mask = [i for i,x in enumerate(self.cripple_mask) if x == 99]
             if joint_mask != []:
                 action[joint_mask[0]] = action[joint_mask[0]] * self.k
                 action[joint_mask[1]] = action[joint_mask[1]] * self.k
@@ -43,11 +37,9 @@ class BaselineEnv(gym.Wrapper):
         return obs, reward, done, info
 
     def reset_task(self,value=None):
-        # randomly cripple leg (4 is nothing)
-        self.crippled_leg = value if value is not None else np.random.randint(0,5) # (0,4)だと0から4個なので0,1,2,3までしかでない！！
+        
+        self.crippled_leg = value if value is not None else np.random.randint(0,5)
 
-        # Pick which actuators to disable
-        # joint rangeを変更する足をマスクで表現、99を代入しておく
         self.cripple_mask = np.ones(self.action_space.shape)
         if self.crippled_leg == 0:
             self.cripple_mask[2] = 99
