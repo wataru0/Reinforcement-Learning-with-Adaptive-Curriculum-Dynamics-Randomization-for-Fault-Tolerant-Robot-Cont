@@ -50,13 +50,7 @@ class CDREnv(gym.Wrapper):
         # kのアップデートサイズ
         self.update_k_step_size = 0.01
 
-        # minもmaxも1からスタート(v1),minもmaxも0からスタート(v2)
         if version == 1:
-            # 〜6/9
-            # self.joint_min = 1.0 
-            # self.joint_max = 1.0 
-
-            # 6/9〜
             self.joint_min = 1.5
             self.joint_max = 1.5 
         elif version == 2:
@@ -71,34 +65,26 @@ class CDREnv(gym.Wrapper):
         rewardlist.append(self.cReward)
         self.cReward = 0 
 
-        # bufferにパフォーマンスを格納していく，buffer_sizeを超えたら評価する
         if len(self.buffer) < self.buffer_size:
             self.buffer.append(self.total_reward)
 
 
-        else: # 能力の評価
+        else:
             ave = sum(self.buffer)/len(self.buffer)
-            # 前より能力アップしていたら
             if self.before_average < ave: 
 
                 # Curriculum2-v1
                 if self.version == 1:
                     if self.joint_min > 0.0:
                         self.joint_min -= self.update_k_step_size
-                        # kのminとmaxの差が0.1以上になったらmaxも減らす (upperfixではコメントアウト)
                         if self.bound_fix is not True:
                             if abs(self.joint_max - self.joint_min) >= 0.1:
                                 self.joint_max -= self.update_k_step_size
 
                 # Curriculum2-v2
                 if self.version == 2:
-                    # 〜6/9
-                    # if self.joint_max <= 1.0:
-
-                    # 6/9〜
                     if self.joint_max <= 1.5:
                         self.joint_max += self.update_k_step_size
-                        # kのminとmaxの差が0.1以上になったらminも上昇 (lowerfixではコメントアウト)
                         if self.bound_fix is not True:
                             if abs(self.joint_max - self.joint_min) >= 0.1:
                                 self.joint_min += self.update_k_step_size

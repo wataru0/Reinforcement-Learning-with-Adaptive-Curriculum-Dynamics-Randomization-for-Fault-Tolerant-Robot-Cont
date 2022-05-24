@@ -83,14 +83,11 @@ class LCLEnv(gym.Wrapper):
             # ver1:ランダムに選ばれた足一本の2個ある関節のうちどちらかのactuatorを変更する処理
             if joint_mask != []:
                 # self.joint_num：0（第一関節故障），1（第二関節故障），2（二つの関節両方故障）
-                #self.joint_num = np.random.randint(0,3) # これからやろうとしている
                 self.joint_num = 2 # 前のやり方
                 if self.joint_num == 0:
                     action[joint_mask[0]]=henkan(action[joint_mask[0]], -1, 1, -self.joint_range, self.joint_range)
-                    # actuator_map[index][joint_mask[0]] += 1
                 elif self.joint_num == 1:
                     action[joint_mask[1]]=henkan(action[joint_mask[1]], -1, 1, -self.joint_range, self.joint_range)
-                    # actuator_map[index][joint_mask[1]] += 1
                 else:
                     action[joint_mask[0]]=henkan(action[joint_mask[0]], -1, 1, -self.joint_range, self.joint_range)
                     action[joint_mask[1]]=henkan(action[joint_mask[1]], -1, 1, -self.joint_range, self.joint_range)
@@ -133,15 +130,11 @@ class LCLEnv(gym.Wrapper):
                         self.joint_min = min(1.5, self.joint_min)
 
     def reset_task(self, value=None):
-        # randomly cripple leg (4 is nothing)
-        # (0,4)だと0から4個なので0,1,2,3までしかでない！！
         self.crippled_leg = value if value is not None else np.random.randint(0,5)
         
-        # joint_min~joint_maxまでの乱数を生成。これがaction値のrangeになる
         self.joint_range = random.uniform(self.joint_min, self.joint_max)
 
         # Pick which actuators to disable
-        # joint rangeを変更する足をマスクで表現、99を代入しておく
         self.cripple_mask = np.ones(self.action_space.shape)
         if self.crippled_leg == 0:
             self.cripple_mask[2] = 99
