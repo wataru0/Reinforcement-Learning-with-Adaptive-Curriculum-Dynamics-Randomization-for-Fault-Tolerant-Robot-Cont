@@ -1,11 +1,4 @@
-# Curriculum Dynamics Randomization Algorithm
-# 2021/04/27
-# 提案手法
-# 今まで一つのファイルでトレーニングを回していたのをクラスごとにしっかり分けようというもの
-# train.pyを実行する際に，gym環境をラッパーすることで実装する
-
-# トルクのランダム化範囲について先行研究
-# https://arxiv.org/pdf/2010.04304.pdf
+# Adaptive Curriculum Dynamics Randomization Algorithm
 
 import os
 import gym
@@ -17,11 +10,11 @@ import pandas as pd
 import datetime
 
 #可視化用
-joint_actuator_range_max = [] # kの上限値を格納するリスト
-joint_actuator_range_min = [] # kの下限値を格納するリスト
-actuator_map = np.zeros((10,8)) # 適用された故障率の分布を調べるためのマップ
+joint_actuator_range_max = [] 
+joint_actuator_range_min = [] 
+actuator_map = np.zeros((10,8)) 
 actuator_bunpu= [0]*10
-actuator_power_map = np.zeros((10,8)) # 実際のactuator出力の分布を調べるためのマップ
+actuator_power_map = np.zeros((10,8)) 
 rewardlist = []
 
 # 平均報酬
@@ -33,11 +26,8 @@ def henkan(val, start1, stop1, start2, stop2):
     return start2 + (stop2 - start2) * ((val-start1)/(stop1 - start1))
 
 class CDREnv(gym.Wrapper):
-    # クラス変数
-
     def __init__(self, env, value=None, version=2, bound_fix=False):
-        super().__init__(env) # 親クラスの呼び出しが必要
-        # 以下インスタンス変数
+        super().__init__(env) 
         self.value = value 
         self.version = version
         self.crippled_leg = 0
@@ -48,7 +38,6 @@ class CDREnv(gym.Wrapper):
         self.total_reward = 0
         # rewardを保存しておくバッファー
         self.buffer = [] 
-        # 今まで（2021/05/16）100だった,1000も試した．その次500
         # default: 100
         self.buffer_size = 50
         # 前回の分布での報酬の平均値を格納しておく変数
@@ -78,15 +67,12 @@ class CDREnv(gym.Wrapper):
         self.bound_fix = bound_fix
 
     def reset(self, **kwargs): 
-        # **kwargs:任意個数の引数を辞書として受け取る
         self.reset_task()
         rewardlist.append(self.cReward)
         self.cReward = 0 
 
         # bufferにパフォーマンスを格納していく，buffer_sizeを超えたら評価する
         if len(self.buffer) < self.buffer_size:
-            # joint actuator force rangeが[0.9,1]の分布の範囲である時性能を評価する．
-            # bufferに格納
             self.buffer.append(self.total_reward)
 
 
@@ -117,15 +103,6 @@ class CDREnv(gym.Wrapper):
                             if abs(self.joint_max - self.joint_min) >= 0.1:
                                 self.joint_min += self.update_k_step_size
 
-            # else: #能力アップしていなかったら
-            #     # 下げなくていいかも，k＝０から上昇させるときは，
-            #     if self.joint_max > 0.0:
-            #         self.joint_max -= 0.1 # joint_maxを下げる
-            #         # minも下げる
-            #         if self.joint_max - self.joint_min < 1.0:
-            #             if self.joint_min > 0.0:
-            #                 self.joint_min -= 0.1
-
             # 前回の平均報酬を更新
             self.before_average = ave
             # バッファを空にする
@@ -137,36 +114,25 @@ class CDREnv(gym.Wrapper):
 
     def step(self, action):
         if self.cripple_mask is not None:
-            joint_mask = [i for i,x in enumerate(self.cripple_mask) if x == 99] # 99が入っているインデックスを取得
-            # print(joint_mask) # [4,5]のように表示される
+            joint_mask = [i for i,x in enumerate(self.cripple_mask) if x == 99]
             
             # ver1:ランダムに選ばれた足一本の2個ある関節のうちどちらかのactuatorを変更する処理
             if joint_mask != []:
-                # グラフ作成用
-                # 各関節の故障率の分布を見る，actuator_mapで      
+                # グラフ作成用  
                 index = int(self.joint_range*10)
                 if index == 10:
                     index = 9
                 
                 # self.joint_num：0（第一関節故障），1（第二関節故障），2（二つの関節両方故障）
                 #self.joint_num = np.random.randint(0,3) # これからやろうとしている
-                self.joint_num = 2 # 前のやり方
+                self.joint_num = 2
                 if self.joint_num == 0:
                     action[joint_mask[0]]=henkan(action[joint_mask[0]], -1, 1, -self.joint_range, self.joint_range)
-                    # actuator_map[index][joint_mask[0]] += 1
                 elif self.joint_num == 1:
                     action[joint_mask[1]]=henkan(action[joint_mask[1]], -1, 1, -self.joint_range, self.joint_range)
-                    # actuator_map[index][joint_mask[1]] += 1
                 else:
                     action[joint_mask[0]]=henkan(action[joint_mask[0]], -1, 1, -self.joint_range, self.joint_range)
                     action[joint_mask[1]]=henkan(action[joint_mask[1]], -1, 1, -self.joint_range, self.joint_range)
-                    # actuator_map[index][joint_mask[0]] += 1
-                    # actuator_map[index][joint_mask[1]] += 1
-            #ーーーー action = self.cripple_mask * action
-            #print(action) # joint_maskの要素のaction値をクリップ(指定した値の間の値に変換)することができた
-
-        # ver2:エージェントにある関節8個全てのactuatorをランダムに変更する処理
-        # action = action * self.actuator_list #np.arrayはこの計算できる，各要素同士の積になる
 
         obs,reward,done,info = self.env.step(action)
         self.num_step += 1
@@ -175,34 +141,18 @@ class CDREnv(gym.Wrapper):
         # グラフ作成用
         joint_actuator_range_max.append(self.joint_max)
         joint_actuator_range_min.append(self.joint_min)
-        # for i,a in enumerate(action):
-        #     index = int(abs(a)*10)
-        #     if index == 10:
-        #         index = 9
-        #     actuator_power_map[index][i] += 1
 
         self.cReward += reward
         
         return obs, reward, done, info
 
     def reset_task(self, value=None):
-        # randomly cripple leg (4 is nothing)
-        # (0,4)だと0から4個なので0,1,2,3までしかでない！！
         self.crippled_leg = value if value is not None else np.random.randint(0,5)
         
-        # joint_min~joint_maxまでの乱数を生成。これがaction値のrangeになる
         self.joint_range = random.uniform(self.joint_min, self.joint_max)
 
-        # もう少し考える必要ある---6/28
-        # 各関節で変化させる
-        # for i in range(len(self.actuator_list)):
-        #     #self.joint_range = random.uniform(0,self.joint_max) #確認用
-        #     self.joint_range = random.uniform(self.joint_min,self.joint_max)
-        #     self.actuator_list[i] = self.joint_range # 各関節リストにactuatorの値を格納
-        #---------------------------
         
         # Pick which actuators to disable
-        # joint rangeを変更する足をマスクで表現、99を代入しておく
         self.cripple_mask = np.ones(self.action_space.shape)
         if self.crippled_leg == 0:
             self.cripple_mask[2] = 99
@@ -241,11 +191,6 @@ class CDREnv(gym.Wrapper):
         os.makedirs(figdir, exist_ok=True)
         
         plt.figure()
-        # fig, (ax1,ax2,ax3,ax4) = plt.subplots(1,4,figsize=(45,10))
-        # sns.heatmap(actuator_map,ax=ax1)
-        # ax1.set(xlabel='joint',ylabel='k')
-        # sns.heatmap(actuator_power_map,ax=ax2)
-        # ax2.set(xlabel='joint',ylabel='actuator force')
 
         fig, (ax3,ax4) = plt.subplots(1,2,figsize=(25,10))
         ax3.plot(joint_actuator_range_max)
