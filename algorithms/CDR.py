@@ -124,7 +124,6 @@ class CDREnv(gym.Wrapper):
                     index = 9
                 
                 # self.joint_num：0（第一関節故障），1（第二関節故障），2（二つの関節両方故障）
-                #self.joint_num = np.random.randint(0,3) # これからやろうとしている
                 self.joint_num = 2
                 if self.joint_num == 0:
                     action[joint_mask[0]]=henkan(action[joint_mask[0]], -1, 1, -self.joint_range, self.joint_range)
