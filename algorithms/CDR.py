@@ -1,4 +1,6 @@
 # Adaptive Curriculum Dynamics Randomization (ACDR) Algorithm
+# version1: ACDR_easy2hard
+# version2: ACDR_hard2easy
 
 import os
 import gym
