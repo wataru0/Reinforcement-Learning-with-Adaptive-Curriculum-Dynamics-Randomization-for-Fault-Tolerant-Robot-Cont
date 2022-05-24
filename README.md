@@ -1,5 +1,5 @@
 # Adaptive Curriculum Dynamics Randomization
-Add automatic curriculum function.
+[arXiv](https://arxiv.org/abs/2111.10005)
 
 ![ant](docs/ant.png)
 
